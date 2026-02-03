@@ -27,11 +27,15 @@ open class PayloadLiveData<T>(
     /**
      * 主线程直接设置值
      * @param value 待更新值
+     * @param allowNull 是否允许设置为 null
      * @return `true` success, `false` fail
      */
-    open fun setPayload(value: T?): Boolean {
+    open fun setPayload(
+        value: T?,
+        allowNull: Boolean = false
+    ): Boolean {
         if (shouldUpdatePayload(value)) {
-            if (value != null) {
+            if (allowNull || value != null) {
                 _payload.value = value
                 return true
             }
@@ -42,11 +46,15 @@ open class PayloadLiveData<T>(
     /**
      * 子线程安全设置值 ( 自动切换到主线程 )
      * @param value 待更新值
+     * @param allowNull 是否允许设置为 null
      * @return `true` success, `false` fail
      */
-    open fun postPayload(value: T?): Boolean {
+    open fun postPayload(
+        value: T?,
+        allowNull: Boolean = false
+    ): Boolean {
         if (shouldUpdatePayload(value)) {
-            if (value != null) {
+            if (allowNull || value != null) {
                 _payload.postValue(value)
                 return true
             }
@@ -57,14 +65,42 @@ open class PayloadLiveData<T>(
     /**
      * 智能线程判断 ( 自动选择 setValue、postValue )
      * @param value 待更新值
+     * @param allowNull 是否允许设置为 null
      * @return `true` success, `false` fail
      */
-    open fun smartUpdatePayload(value: T?): Boolean {
+    open fun smartUpdatePayload(
+        value: T?,
+        allowNull: Boolean = false
+    ): Boolean {
         return if (isMainThread()) {
-            setPayload(value)
+            setPayload(value, allowNull)
         } else {
-            postPayload(value)
+            postPayload(value, allowNull)
         }
+    }
+
+    /**
+     * 重置有效载荷数据 ( 主线程直接设置 null )
+     * @return `true` success, `false` fail
+     */
+    open fun resetPayload(): Boolean {
+        return setPayload(null, true)
+    }
+
+    /**
+     * 重置有效载荷数据 ( 子线程安全设置 null )
+     * @return `true` success, `false` fail
+     */
+    open fun postResetPayload(): Boolean {
+        return postPayload(null, true)
+    }
+
+    /**
+     * 重置有效载荷数据 ( 智能线程判断设置 null )
+     * @return `true` success, `false` fail
+     */
+    open fun smartResetPayload(): Boolean {
+        return smartUpdatePayload(null, true)
     }
 
     /**
