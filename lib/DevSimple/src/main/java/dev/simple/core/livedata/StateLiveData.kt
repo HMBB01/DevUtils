@@ -5,23 +5,24 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 
 /**
- * detail: 一个用于封装数据流中有效载荷的 LiveData 类
+ * detail: 一个用于封装可观测单一状态、值的 LiveData 类
  * @author Ttt
+ * 泛化概念：可表示 status、data、source、page 等
  */
-open class PayloadLiveData<T>(
+open class StateLiveData<T>(
     _value: T? = null
 ) {
 
-    // 有效载荷数据
-    protected val _payload = MutableLiveData<T>(_value)
-    val payload: LiveData<T> get() = _payload
+    // 状态数据
+    protected val _state = MutableLiveData<T>(_value)
+    val state: LiveData<T> get() = _state
 
     /**
-     * 获取有效载荷数据
+     * 获取状态数据
      * @return value
      */
-    open fun getPayload(): T? {
-        return _payload.value
+    open fun stateValue(): T? {
+        return _state.value
     }
 
     /**
@@ -30,13 +31,13 @@ open class PayloadLiveData<T>(
      * @param allowNull 是否允许设置为 null
      * @return `true` success, `false` fail
      */
-    open fun setPayload(
+    open fun setState(
         value: T?,
         allowNull: Boolean = false
     ): Boolean {
-        if (shouldUpdatePayload(value)) {
+        if (shouldUpdateState(value)) {
             if (allowNull || value != null) {
-                _payload.value = value
+                _state.value = value
                 return true
             }
         }
@@ -49,13 +50,13 @@ open class PayloadLiveData<T>(
      * @param allowNull 是否允许设置为 null
      * @return `true` success, `false` fail
      */
-    open fun postPayload(
+    open fun postState(
         value: T?,
         allowNull: Boolean = false
     ): Boolean {
-        if (shouldUpdatePayload(value)) {
+        if (shouldUpdateState(value)) {
             if (allowNull || value != null) {
-                _payload.postValue(value)
+                _state.postValue(value)
                 return true
             }
         }
@@ -68,39 +69,39 @@ open class PayloadLiveData<T>(
      * @param allowNull 是否允许设置为 null
      * @return `true` success, `false` fail
      */
-    open fun smartUpdatePayload(
+    open fun smartUpdateState(
         value: T?,
         allowNull: Boolean = false
     ): Boolean {
         return if (isMainThread()) {
-            setPayload(value, allowNull)
+            setState(value, allowNull)
         } else {
-            postPayload(value, allowNull)
+            postState(value, allowNull)
         }
     }
 
     /**
-     * 重置有效载荷数据 ( 主线程直接设置 null )
+     * 重置状态数据 ( 主线程直接设置 null )
      * @return `true` success, `false` fail
      */
-    open fun resetPayload(): Boolean {
-        return setPayload(null, true)
+    open fun resetState(): Boolean {
+        return setState(null, true)
     }
 
     /**
-     * 重置有效载荷数据 ( 子线程安全设置 null )
+     * 重置状态数据 ( 子线程安全设置 null )
      * @return `true` success, `false` fail
      */
-    open fun postResetPayload(): Boolean {
-        return postPayload(null, true)
+    open fun postResetState(): Boolean {
+        return postState(null, true)
     }
 
     /**
-     * 重置有效载荷数据 ( 智能线程判断设置 null )
+     * 重置状态数据 ( 智能线程判断设置 null )
      * @return `true` success, `false` fail
      */
-    open fun smartResetPayload(): Boolean {
-        return smartUpdatePayload(null, true)
+    open fun smartResetState(): Boolean {
+        return smartUpdateState(null, true)
     }
 
     /**
@@ -108,8 +109,8 @@ open class PayloadLiveData<T>(
      * @param value 待更新值
      * @return `true` yes, `false` no
      */
-    open fun shouldUpdatePayload(value: T?): Boolean {
-        return !isEqual(value, _payload.value)
+    open fun shouldUpdateState(value: T?): Boolean {
+        return !isEqual(value, _state.value)
     }
 
     /**
@@ -118,7 +119,7 @@ open class PayloadLiveData<T>(
      * @return `true` yes, `false` no
      */
     open fun isEqual(value: T?): Boolean {
-        return isEqual(value, _payload.value)
+        return isEqual(value, _state.value)
     }
 
     /**
